@@ -1,12 +1,46 @@
-import React from 'react';
+import React, {useState} from 'react';
 import './Login.page.scss';
 import loginImage from './../../assets/login.svg';
 import usernameImage from './../../assets/username.svg';
 import passwordImage from './../../assets/password.svg';
 import googleImage from './../../assets/google 1.svg';
 import facebookImage from './../../assets/facebook 1.svg';
+import {auth} from "../../firebase.js";
+import {useNavigate} from "react-router-dom";
+import {signInWithEmailAndPassword, onAuthStateChanged} from "firebase/auth";
+import toast from "react-hot-toast";
+import {useDispatch} from "react-redux";
+import {login} from "../../core/store/user/userSlice.js";
 
 function LoginPage() {
+  const [email, setEmail] = useState();
+  const [password, setPassword] = useState();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const onEmailChange = (event) => {
+    setEmail(event.target.value);
+  }
+
+  const onPasswordChange = (event) => {
+    setPassword(event.target.value);
+  }
+
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        localStorage.setItem('user', JSON.stringify(userCredential.user));
+        dispatch(login(JSON.stringify(userCredential.user)));
+        navigate('/home');
+      })
+      .catch(error => {
+        console.log(error.message);
+        toast.error(error.message);
+      })
+  }
+
   return (
     <div id='login'>
       <div className="left">
@@ -17,12 +51,13 @@ function LoginPage() {
           </div>
 
           <img src={usernameImage} alt='username-icon' className='username-icon' />
-          <input type="text" placeholder='Username'/>
+          <input type="text" placeholder='Username' onChange={onEmailChange}/>
 
           <img src={passwordImage} alt='password-icon' className='password-icon' />
-          <input type="password" placeholder='Password'/>
+          <input type="password" placeholder='Password' onChange={onPasswordChange}/>
 
-          <button>Next</button>
+          <button onClick={handleSubmit}>Next</button>
+
           <p style={{textAlign: 'center'}}>Login with Others</p>
           <div className="google">
             <img src={googleImage} alt="google-image"/>
